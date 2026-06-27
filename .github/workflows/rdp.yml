@@ -49,8 +49,8 @@ jobs:
         CRD_CODE: ${{ secrets.CHROME_REMOTE_DESKTOP_CODE }}
         RDP_PIN: ${{ secrets.RDP_PIN }}
       run: |
-        # Mengeksekusi perintah otorisasi (SSH/CLI command) dari Google yang disimpan di GitHub Secrets
-        $CRD_CODE --pin=$RDP_PIN
+        # Menggunakan 'eval' agar sintaks inline variable seperti DISPLAY= atau DEBIAN_FRONTEND= bisa dieksekusi dengan benar
+        eval "$CRD_CODE --pin=$RDP_PIN"
         
     - name: Menjaga RDP Tetap Aktif (Looping Maksimal 6 Jam)
       run: |
