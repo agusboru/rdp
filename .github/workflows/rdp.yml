@@ -1,25 +1,44 @@
 name: Free Linux RDP
 
 on: 
-  workflow_dispatch: # Memungkinkan kamu menjalankan RDP ini secara manual via tombol klik
+  workflow_dispatch: # Memungkinkan kamu menjalankan RDP ini secara manual via tombol klik di GitHub
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Mengunduh dan Menginstal Chrome Remote Desktop
+    - name: Mengunduh dan Menginstal Dependensi & Chrome Remote Desktop
       run: |
         sudo apt-get update
+        
+        # 1. Install semua dependensi sistem yang dibutuhkan terlebih dahulu
+        sudo apt-get install -y \
+          gsettings-desktop-schemas \
+          pkexec \
+          python3-psutil \
+          python3-xdg \
+          xbase-clients \
+          xserver-xorg-video-dummy \
+          xvfb \
+          libasound2 \
+          libgbm1 \
+          lightdm
+
+        # 2. Unduh paket resmi Chrome Remote Desktop
         wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+        
+        # 3. Install paket .deb
         sudo dpkg --install chrome-remote-desktop_current_amd64.deb
+        
+        # 4. Jaga-jaga jika ada paket yang terlewat (auto-fix)
         sudo apt install --assume-yes --fix-broken
 
-    - name: Menginstal Desktop Environment (XFCE4 - Sangat Ringan)
+    - name: Menginstal Desktop Environment (XFCE4 - Ringan & Stabil)
       run: |
         sudo apt install xfce4-session xfce4-goodies desktop-base xscreensaver -y
         sudo bash -c 'echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > /etc/chrome-remote-desktop-session'
 
-    - name: Mengonfigurasi Pengguna RDP
+    - name: Mengonfigurasi Pengguna RDP (rdpuser)
       run: |
         sudo adduser rdpuser --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
         sudo echo "rdpuser:123456" | sudo chpasswd
@@ -30,11 +49,15 @@ jobs:
         CRD_CODE: ${{ secrets.CHROME_REMOTE_DESKTOP_CODE }}
         RDP_PIN: ${{ secrets.RDP_PIN }}
       run: |
-        # Eksekusi perintah otorisasi dari secret github
+        # Mengeksekusi perintah otorisasi (SSH/CLI command) dari Google yang disimpan di GitHub Secrets
         $CRD_CODE --pin=$RDP_PIN
         
-    - name: Menjaga RDP Tetap Aktif (Looping 6 Jam)
+    - name: Menjaga RDP Tetap Aktif (Looping Maksimal 6 Jam)
       run: |
-        echo "RDP Berhasil Dibuat! Silakan cek di dashboard Chrome Remote Desktop kamu."
-        # Loop ini menjaga agar GitHub runner tidak langsung mati/selesai dalam 6 jam
-        for i in {1..360}; do echo "RDP masih berjalan menit ke-$i..."; sleep 60; done
+        echo "=== RDP Berhasil Dibuat! ==="
+        echo "Silakan cek halaman browser kamu di: https://remotedesktop.google.com/access"
+        # Loop ini penting agar GitHub Runner tidak langsung 'Success' lalu mematikan servernya
+        for i in {1..360}; do 
+          echo "RDP masih menyala aktif, menit ke-$i..."
+          sleep 60
+        done
