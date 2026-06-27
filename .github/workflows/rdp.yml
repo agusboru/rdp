@@ -1,0 +1,40 @@
+name: Free Linux RDP
+
+on: 
+  workflow_dispatch: # Memungkinkan kamu menjalankan RDP ini secara manual via tombol klik
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Mengunduh dan Menginstal Chrome Remote Desktop
+      run: |
+        sudo apt-get update
+        wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+        sudo dpkg --install chrome-remote-desktop_current_amd64.deb
+        sudo apt install --assume-yes --fix-broken
+
+    - name: Menginstal Desktop Environment (XFCE4 - Sangat Ringan)
+      run: |
+        sudo apt install xfce4-session xfce4-goodies desktop-base xscreensaver -y
+        sudo bash -c 'echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > /etc/chrome-remote-desktop-session'
+
+    - name: Mengonfigurasi Pengguna RDP
+      run: |
+        sudo adduser rdpuser --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
+        sudo echo "rdpuser:123456" | sudo chpasswd
+        sudo usermod -aG sudo rdpuser
+
+    - name: Menjalankan dan Menyambungkan Server RDP
+      env:
+        CRD_CODE: ${{ secrets.CHROME_REMOTE_DESKTOP_CODE }}
+        RDP_PIN: ${{ secrets.RDP_PIN }}
+      run: |
+        # Eksekusi perintah otorisasi dari secret github
+        $CRD_CODE --pin=$RDP_PIN
+        
+    - name: Menjaga RDP Tetap Aktif (Looping 6 Jam)
+      run: |
+        echo "RDP Berhasil Dibuat! Silakan cek di dashboard Chrome Remote Desktop kamu."
+        # Loop ini menjaga agar GitHub runner tidak langsung mati/selesai dalam 6 jam
+        for i in {1..360}; do echo "RDP masih berjalan menit ke-$i..."; sleep 60; done
