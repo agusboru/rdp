@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: Download & Install Chrome Remote Desktop
       run: |
-        $updater = "https://dl.google.com/installed-apps/chromeremotedesktop/chromeremotedesktophost.msi"
+        $updater = "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi"
         Invoke-WebRequest -Uri $updater -OutFile "chromeremotedesktophost.msi"
         Start-Process msiexec.exe -ArgumentList "/i chromeremotedesktophost.msi /quiet /qn /norestart" -Wait
 
