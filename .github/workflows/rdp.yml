@@ -1,63 +1,35 @@
-name: Free Linux RDP
+name: Chrome Remote Desktop Windows
 
-on: 
-  workflow_dispatch: # Memungkinkan kamu menjalankan RDP ini secara manual via tombol klik di GitHub
+on:
+  workflow_dispatch: # Dapat dijalankan secara manual dari tab Actions
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+
     steps:
-    - name: Mengunduh dan Menginstal Dependensi & Chrome Remote Desktop
+    - name: Download & Install Chrome Remote Desktop
       run: |
-        sudo apt-get update
-        
-        # Menggunakan libasound2t64 untuk kompatibilitas Ubuntu terbaru
-        sudo apt-get install -y \
-          gsettings-desktop-schemas \
-          pkexec \
-          python3-psutil \
-          python3-xdg \
-          xbase-clients \
-          xserver-xorg-video-dummy \
-          xvfb \
-          libasound2t64 \
-          libgbm1 \
-          lightdm
+        $updater = "https://dl.google.com/installed-apps/chromeremotedesktop/chromeremotedesktophost.msi"
+        Invoke-WebRequest -Uri $updater -OutFile "chromeremotedesktophost.msi"
+        Start-Process msiexec.exe -ArgumentList "/i chromeremotedesktophost.msi /quiet /qn /norestart" -Wait
 
-        # Unduh paket resmi Chrome Remote Desktop
-        wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+    - name: Konfigurasi dan Jalankan Chrome RDP
+      run: |
+        $Pin = "${{ secrets.CRD_PIN }}"
+        $AuthCode = "${{ secrets.CRD_CODE }}"
         
-        # Install paket .deb
-        sudo dpkg --install chrome-remote-desktop_current_amd64.deb
-        
-        # Auto-fix jika ada dependensi yang kurang
-        sudo apt install --assume-yes --fix-broken
+        # Menjalankan perintah otorisasi dari Google dengan PIN yang ditentukan
+        Invoke-Expression "$AuthCode --pin=$Pin"
 
-    - name: Menginstal Desktop Environment (XFCE4 - Ringan & Stabil)
+    - name: Mencegah Runner Mati (Keep-Alive)
       run: |
-        sudo apt install xfce4-session xfce4-goodies desktop-base xscreensaver -y
-        sudo bash -c 'echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > /etc/chrome-remote-desktop-session'
-
-    - name: Mengonfigurasi Pengguna RDP (rdpuser)
-      run: |
-        sudo adduser rdpuser --gecos "First Last,RoomNumber,WorkPhone,HomePhone" --disabled-password
-        sudo echo "rdpuser:123456" | sudo chpasswd
-        sudo usermod -aG sudo rdpuser
-
-    - name: Menjalankan dan Menyambungkan Server RDP
-      env:
-        CRD_CODE: ${{ secrets.CHROME_REMOTE_DESKTOP_CODE }}
-        RDP_PIN: ${{ secrets.RDP_PIN }}
-      run: |
-        # Menggunakan 'eval' agar sintaks inline variable seperti DISPLAY= atau DEBIAN_FRONTEND= bisa dieksekusi dengan benar
-        eval "$CRD_CODE --pin=$RDP_PIN"
-        
-    - name: Menjaga RDP Tetap Aktif (Looping Maksimal 6 Jam)
-      run: |
-        echo "=== RDP Berhasil Dibuat! ==="
-        echo "Silakan cek halaman browser kamu di: https://remotedesktop.google.com/access"
-        # Loop ini penting agar GitHub Runner tidak langsung 'Success' lalu mematikan servernya
-        for i in {1..360}; do 
-          echo "RDP masih menyala aktif, menit ke-$i..."
-          sleep 60
-        done
+        Write-Host "Chrome Remote Desktop berhasil dikonfigurasi dan berjalan!"
+        # Loop untuk menjaga sesi tetap aktif hingga batas maksimum timeout (6 jam)
+        $timeout = 360 # Menit
+        $elapsed = 0
+        while ($elapsed -lt $timeout) {
+            Start-Sleep -Seconds 60
+            $elapsed++
+            Write-Host "RDP Aktif: $elapsed / $timeout menit..."
+        }
