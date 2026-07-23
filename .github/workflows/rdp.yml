@@ -1,4 +1,4 @@
-name: Chrome Remote Desktop & MuMu Player Windows
+name: Chrome Remote Desktop, MuMu Player & Python Windows
 
 on:
   workflow_dispatch: # Dapat dijalankan secara manual dari tab Actions
@@ -14,13 +14,22 @@ jobs:
         Invoke-WebRequest -Uri $updater -OutFile "chromeremotedesktophost.msi"
         Start-Process msiexec.exe -ArgumentList "/i chromeremotedesktophost.msi /quiet /qn /norestart" -Wait
 
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # Menyiapkan Python versi 3.11 secara otomatis
+
+    - name: Verify Python & Install Basic Packages
+      run: |
+        python --version
+        pip --version
+        # Jika Anda butuh library pendukung seperti OpenCV atau ADB wrapper, install di sini:
+        # pip install opencv-python numpy
+
     - name: Download & Install MuMu Player
       run: |
-        # Download installer MuMu Player
         $mumuUrl = "https://a11.gdl.netease.com/MuMuPlayerGlobal-v12.0.0.0-installer.exe"
         Invoke-WebRequest -Uri $mumuUrl -OutFile "mumu_setup.exe"
-        
-        # Jalankan instalasi secara silent/background
         Start-Process -FilePath ".\mumu_setup.exe" -ArgumentList "/S" -Wait
 
     - name: Konfigurasi dan Jalankan Chrome RDP
@@ -30,8 +39,7 @@ jobs:
 
     - name: Mencegah Runner Mati (Keep-Alive)
       run: |
-        Write-Host "Chrome Remote Desktop dan MuMu Player berhasil disiapkan!"
-        # Loop untuk menjaga sesi tetap aktif hingga batas maksimum timeout (6 jam)
+        Write-Host "CRD, Python, dan MuMu Player siap digunakan!"
         $timeout = 360 # Menit
         $elapsed = 0
         while ($elapsed -lt $timeout) {
