@@ -28,8 +28,13 @@ jobs:
 
     - name: Download & Install MuMu Player
       run: |
-        $mumuUrl = "https://a11.gdl.netease.com/MuMuPlayerGlobal-v12.0.0.0-installer.exe"
-        Invoke-WebRequest -Uri $mumuUrl -OutFile "mumu_setup.exe"
+        # Download installer versi terbaru dari endpoint resmi
+        $mumuUrl = "https://a11.gdl.netease.com/MuMuPlayerGlobal-installer.exe"
+        
+        # Opsi cadangan jika link NetEase pertama diblokir/error:
+        # $mumuUrl = "https://mumuglobal.com/download/MuMuPlayerGlobal-installer.exe"
+
+        Invoke-WebRequest -Uri $mumuUrl -OutFile "mumu_setup.exe" -UserAgent "Mozilla/5.0"
         Start-Process -FilePath ".\mumu_setup.exe" -ArgumentList "/S" -Wait
 
     - name: Konfigurasi dan Jalankan Chrome RDP
