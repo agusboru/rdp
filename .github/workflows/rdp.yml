@@ -26,14 +26,6 @@ jobs:
         # Jika Anda butuh library pendukung seperti OpenCV atau ADB wrapper, install di sini:
         # pip install opencv-python numpy
 
-    - name: Download & Install MuMu Player
-      run: |
-        # Download installer versi terbaru dari endpoint resmi
-        $mumuUrl = "https://a11.gdl.netease.com/MuMu_6.0.1_gw-win-download_all_1783407295.exe?n=MuMu_6.0.1_RFmN8eC.exe&key1=d4924072ea650848dc429275ba3f68ad&key2=6a625aed"
-
-        Invoke-WebRequest -Uri $mumuUrl -OutFile "mumu_setup.exe" -UserAgent "Mozilla/5.0"
-        Start-Process -FilePath ".\mumu_setup.exe" -ArgumentList "/S" -Wait
-
     - name: Konfigurasi dan Jalankan Chrome RDP
       run: |
         $Pin = "${{ secrets.CRD_PIN }}"
