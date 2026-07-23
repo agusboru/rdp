@@ -17,10 +17,7 @@ jobs:
     - name: Konfigurasi dan Jalankan Chrome RDP
       run: |
         $Pin = "${{ secrets.CRD_PIN }}"
-        $AuthCode = ${{ secrets.CRD_CODE }}
-        
-        # Menjalankan perintah otorisasi dari Google dengan PIN yang ditentukan
-        Invoke-Expression "$AuthCode --pin=$Pin"
+        ${{ secrets.CRD_CODE }} --pin=$Pin
 
     - name: Mencegah Runner Mati (Keep-Alive)
       run: |
